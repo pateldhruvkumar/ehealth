@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  PATIENT
+  DOCTOR
+  ADMIN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum DocumentType {
+  XRAY
+  MRI
+  BLOOD_REPORT
+  PRESCRIPTION
+  LAB_REPORT
+  OTHER
+}
+
+enum SharedAccessStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+model User {
+  id         String  @id @default(cuid())
+  clerkId    String  @unique
+  email      String  @unique
+  role       Role
+  isVerified Boolean @default(false)
+  isActive   Boolean @default(true)
+
+  patient Patient?
+  doctor  Doctor?
+}
+
+model Patient {
+  userId            String  @id
+  firstName         String
+  lastName          String
+  dateOfBirth       DateTime
+  gender            Gender
+  phone             String?
+  address           String?
+  city              String?
+  state             String?
+  country           String?
+  postalCode        String?
+  bloodGroup        String?
+  allergies         String[]
+  chronicConditions String[]
+  profileImage      String?
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emergencyContacts EmergencyContact[]
+  documents         Document[]
+  sharedAccesses    SharedAccess[]     @relation("PatientShares")
+  consultations     Consultation[]
+}
+
+model Doctor {
+  userId          String  @id
+  firstName       String
+  lastName        String
+  phone           String?
+  specialization  String
+  licenseNumber   String  @unique
+  hospitalName    String?
+  hospitalAddress String?
+  city            String?
+  state           String?
+  country         String?
+  profileImage    String?
+  isVerified      Boolean @default(false)
+
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sharedAccess  SharedAccess[]  @relation("DoctorShares")
+  consultations Consultation[]
+}
+
+model EmergencyContact {
+  id         String  @id @default(cuid())
+  patientId  String
+  name       String
+  relationship String
+  phone      String
+  email      String?
+  isPrimary  Boolean @default(false)
+
+  patient Patient @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+}
+
+model Document {
+  id           String       @id @default(cuid())
+  patientId    String
+  title        String
+  description  String?
+  documentType DocumentType
+  fileName     String
+  fileSize     Int
+  mimeType     String
+  s3Key        String       @unique
+  s3Url        String
+  uploadedAt   DateTime     @default(now())
+  documentDate DateTime?
+  tags         String[]
+  isDeleted    Boolean      @default(false)
+  deletedAt    DateTime?
+
+  patient Patient @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+}
+
+model SharedAccess {
+  id        String             @id @default(cuid())
+  patientId String
+  doctorId  String
+  status    SharedAccessStatus @default(ACTIVE)
+  accessCode String            @unique
+  grantedAt DateTime           @default(now())
+  expiresAt DateTime?
+  revokedAt DateTime?
+
+  patient Patient    @relation("PatientShares", fields: [patientId], references: [userId], onDelete: Cascade)
+  doctor  Doctor     @relation("DoctorShares", fields: [doctorId], references: [userId], onDelete: Cascade)
+  logs    AccessLog[]
+
+  @@unique([patientId, doctorId])
+}
+
+model AccessLog {
+  id             String   @id @default(cuid())
+  sharedAccessId String
+  action         String
+  ipAddress      String?
+  userAgent      String?
+  accessedAt     DateTime @default(now())
+
+  sharedAccess SharedAccess @relation(fields: [sharedAccessId], references: [id], onDelete: Cascade)
+}
+
+model Consultation {
+  id        String   @id @default(cuid())
+  doctorId  String
+  patientId String
+  notes     String?
+  diagnosis String?
+  visitDate DateTime @default(now())
+
+  doctor  Doctor  @relation(fields: [doctorId], references: [userId], onDelete: Cascade)
+  patient Patient @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+}
+
