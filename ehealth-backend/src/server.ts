@@ -1,96 +1,82 @@
+import "dotenv/config";
+
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
-import { config } from "./config/env";
+
+import { connectDB, disconnectDB } from "./config/database";
+import { HOST, PORT, FRONTEND_URL } from "./config/env";
+import { errorHandler } from "./middleware/error-handler";
+import { authRoutes } from "./routes/auth";
 import { healthRoutes } from "./routes/health";
+import { doctorRoutes } from "./routes/doctor";
+import { documentRoutes } from "./routes/document";
+import { patientRoutes } from "./routes/patient";
+import { sharingRoutes } from "./routes/sharing";
 
-// Create Fastify instance with logging
-const fastify = Fastify({
-  logger: {
-    level: config.nodeEnv === "development" ? "info" : "warn",
-    transport:
-      config.nodeEnv === "development"
-        ? { target: "pino-pretty", options: { colorize: true } }
-        : undefined,
-  },
-});
-
-// Register plugins
-async function registerPlugins() {
-  // CORS - allow frontend to make requests
-  await fastify.register(cors, {
-    origin: config.frontendUrl,
-    credentials: true,
+async function buildServer() {
+  const app = Fastify({
+    logger: {
+      transport:
+        process.env.NODE_ENV === "development"
+          ? {
+              target: "pino-pretty",
+              options: { translateTime: "SYS:standard", ignore: "pid,hostname" }
+            }
+          : undefined
+    }
   });
 
-  // Security headers
-  await fastify.register(helmet, {
-    contentSecurityPolicy: false, // Disable for development
-  });
-}
-
-// Register routes
-async function registerRoutes() {
-  await fastify.register(healthRoutes, { prefix: "/api" });
-}
-
-function isAddrInUseError(err: unknown): boolean {
-  return (
-    typeof err === "object" &&
-    err !== null &&
-    "code" in err &&
-    (err as { code?: unknown }).code === "EADDRINUSE"
-  );
-}
-
-// Start server
-async function start() {
-  let port = config.port;
   try {
-    await registerPlugins();
-    await registerRoutes();
+    await connectDB();
+    app.log.info("Database connected");
+  } catch (err) {
+    app.log.error({ err }, "Database connection failed (continuing without DB)");
+  }
 
-    // In development, if the configured port is taken, try the next ports.
-    // This prevents noisy EADDRINUSE failures when you accidentally have another dev server running.
-    const maxAttempts = config.nodeEnv === "development" ? 10 : 1;
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+  await app.register(cors, {
+    origin: process.env.NODE_ENV === "development" ? true : FRONTEND_URL,
+    credentials: true
+  });
+
+  await app.register(helmet);
+
+  app.setErrorHandler(errorHandler);
+
+  await app.register(healthRoutes, { prefix: "/api" });
+  await app.register(authRoutes, { prefix: "/api/auth" });
+  await app.register(patientRoutes, { prefix: "/api/patient" });
+  await app.register(doctorRoutes, { prefix: "/api/doctor" });
+  await app.register(documentRoutes, { prefix: "/api/documents" });
+  await app.register(sharingRoutes, { prefix: "/api/sharing" });
+
+  return app;
+}
+
+async function start() {
+  const app = await buildServer();
+
+  const close = async () => {
+    try {
+      await app.close();
+    } finally {
       try {
-        await fastify.listen({ port, host: config.host });
-        break;
-      } catch (err) {
-        if (isAddrInUseError(err) && attempt < maxAttempts - 1) {
-          port += 1;
-          continue;
-        }
-        throw err;
+        await disconnectDB();
+      } catch {
+        // ignore
       }
     }
+  };
 
-    console.log(`
-    🚀 E-Health API Server Running!
-    
-    Environment: ${config.nodeEnv}
-    Local:       http://localhost:${port}
-    Health:      http://localhost:${port}/api/health
-    
-    Ready to accept requests...
-    `);
-  } catch (err) {
-    fastify.log.error(err);
-    process.exit(1);
-  }
+  process.once("SIGINT", close);
+  process.once("SIGTERM", close);
+
+  await app.listen({ port: PORT, host: HOST });
 }
 
-// Handle graceful shutdown
-process.on("SIGINT", async () => {
-  console.log("\nShutting down gracefully...");
-  await fastify.close();
-  process.exit(0);
+start().catch((err) => {
+  // eslint-disable-next-line no-console
+  console.error(err);
+  process.exit(1);
 });
 
-process.on("SIGTERM", async () => {
-  await fastify.close();
-  process.exit(0);
-});
-
-start();

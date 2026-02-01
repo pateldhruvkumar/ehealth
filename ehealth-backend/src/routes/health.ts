@@ -1,20 +1,24 @@
-import { FastifyInstance } from "fastify";
+import type { FastifyInstance } from "fastify";
+import { prisma } from "../config/database";
+import { success } from "../utils/response";
 
-export async function healthRoutes(fastify: FastifyInstance) {
-  // Basic health check
-  fastify.get("/health", async (request, reply) => {
-    return {
-      status: "ok",
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-    };
+export async function healthRoutes(app: FastifyInstance) {
+  app.get("/", async (_request, reply) => {
+    return success(reply, { name: "ehealth-backend", status: "ok" }, "API info");
   });
 
-  // Hello world test endpoint
-  fastify.get("/", async (request, reply) => {
-    return {
-      message: "Welcome to E-Health API",
-      version: "1.0.0",
-    };
+  app.get("/health", async (_request, reply) => {
+    let db = "down";
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const _result = await prisma.$queryRaw`SELECT 1`;
+      db = "up";
+    } catch {
+      db = "down";
+    }
+
+    const overall = db === "up" ? "ok" : "degraded";
+    return success(reply, { status: overall, db }, "Health check");
   });
 }
+
