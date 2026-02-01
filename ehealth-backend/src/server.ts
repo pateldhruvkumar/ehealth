@@ -21,22 +21,32 @@ async function buildServer() {
         process.env.NODE_ENV === "development"
           ? {
               target: "pino-pretty",
-              options: { translateTime: "SYS:standard", ignore: "pid,hostname" }
+              options: {
+                translateTime: "SYS:standard",
+                ignore: "pid,hostname",
+              },
             }
-          : undefined
-    }
+          : undefined,
+    },
   });
 
   try {
     await connectDB();
     app.log.info("Database connected");
   } catch (err) {
-    app.log.error({ err }, "Database connection failed (continuing without DB)");
+    app.log.error(
+      { err },
+      "Database connection failed (continuing without DB)"
+    );
   }
 
   await app.register(cors, {
     origin: process.env.NODE_ENV === "development" ? true : FRONTEND_URL,
-    credentials: true
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["Content-Range", "X-Content-Range"],
+    maxAge: 600, // Cache preflight for 10 minutes
   });
 
   await app.register(helmet);
@@ -74,9 +84,8 @@ async function start() {
   await app.listen({ port: PORT, host: HOST });
 }
 
-start().catch((err) => {
+start().catch(err => {
   // eslint-disable-next-line no-console
   console.error(err);
   process.exit(1);
 });
-
