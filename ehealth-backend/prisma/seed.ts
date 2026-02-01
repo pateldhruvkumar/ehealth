@@ -1,5 +1,6 @@
 import "../src/config/env";
 import { prisma } from "../src/config/database";
+import bcrypt from "bcryptjs";
 
 async function clearAll() {
   // Delete in FK-safe order
@@ -16,11 +17,13 @@ async function clearAll() {
 async function main() {
   await clearAll();
 
+  const hashedPassword = await bcrypt.hash("Password123!", 10);
+
   // Create users
   const patientUser = await prisma.user.create({
     data: {
-      clerkId: "clerk_patient_001",
       email: "patient@example.com",
+      password: hashedPassword,
       role: "PATIENT",
       isVerified: true,
       isActive: true
@@ -29,8 +32,8 @@ async function main() {
 
   const doctorUser = await prisma.user.create({
     data: {
-      clerkId: "clerk_doctor_001",
       email: "doctor@example.com",
+      password: hashedPassword,
       role: "DOCTOR",
       isVerified: true,
       isActive: true
@@ -39,8 +42,8 @@ async function main() {
 
   const adminUser = await prisma.user.create({
     data: {
-      clerkId: "clerk_admin_001",
       email: "admin@example.com",
+      password: hashedPassword,
       role: "ADMIN",
       isVerified: true,
       isActive: true
@@ -187,11 +190,11 @@ async function main() {
   // eslint-disable-next-line no-console
   console.log("Seed complete.");
   // eslint-disable-next-line no-console
-  console.log("Patient:", { email: patientUser.email, clerkId: patientUser.clerkId, userId: patientUser.id });
+  console.log("Patient:", { email: patientUser.email, userId: patientUser.id });
   // eslint-disable-next-line no-console
-  console.log("Doctor:", { email: doctorUser.email, clerkId: doctorUser.clerkId, userId: doctorUser.id });
+  console.log("Doctor:", { email: doctorUser.email, userId: doctorUser.id });
   // eslint-disable-next-line no-console
-  console.log("Admin:", { email: adminUser.email, clerkId: adminUser.clerkId, userId: adminUser.id });
+  console.log("Admin:", { email: adminUser.email, userId: adminUser.id });
   // eslint-disable-next-line no-console
   console.log("Created:", {
     patientId: patient.userId,
@@ -214,4 +217,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-
