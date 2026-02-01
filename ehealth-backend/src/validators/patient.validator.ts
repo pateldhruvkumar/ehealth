@@ -22,7 +22,7 @@ export const createEmergencyContactSchema = z.object({
   name: z.string().min(1),
   relationship: z.string().min(1),
   phone: z.string().min(6),
-  email: z.string().email().optional().or(z.literal("")).transform(val => val === "" ? undefined : val),
+  email: z.union([z.string().email(), z.literal("")]).optional().transform(val => val === "" ? undefined : val),
   isPrimary: z.boolean().optional()
 });
 
@@ -30,7 +30,7 @@ export const updateEmergencyContactSchema = z.object({
   name: z.string().min(1).optional(),
   relationship: z.string().min(1).optional(),
   phone: z.string().min(6).optional(),
-  email: z.string().email().optional().or(z.literal("")).transform(val => val === "" ? undefined : val),
+  email: z.union([z.string().email(), z.literal("")]).optional().transform(val => val === "" ? undefined : val),
   isPrimary: z.boolean().optional()
 });
 

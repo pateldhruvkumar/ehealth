@@ -4,13 +4,31 @@ node_modules/
 # Build output
 dist/
 
-# Environment files
+# Environment files - NEVER COMMIT THESE
 .env
 .env.local
 .env.*.local
+.env.development
 .env.development.local
+.env.test
 .env.test.local
+.env.production
 .env.production.local
+*.env
+*.env.local
+*.env.backup
+
+# Secrets and credentials
+secrets/
+credentials/
+*.key
+*.pem
+*.cert
+*.crt
+*.p12
+*.pfx
+config/secrets.json
+config/credentials.json
 
 # Logs
 logs/
@@ -43,3 +61,23 @@ coverage/
 # Temporary files
 *.tmp
 .cache/
+
+# Database files (if using SQLite locally)
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup files
+*.backup
+*.bak
+*.old
+*~
+
+# AWS and cloud credentials
+.aws/
+.gcloud/
+.azure/
+
+# Docker secrets
+docker-compose.override.yml
+.dockerignore.local
