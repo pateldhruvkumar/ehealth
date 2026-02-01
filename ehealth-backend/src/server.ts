@@ -36,7 +36,11 @@ async function buildServer() {
 
   await app.register(cors, {
     origin: process.env.NODE_ENV === "development" ? true : FRONTEND_URL,
-    credentials: true
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["Content-Range", "X-Content-Range"],
+    maxAge: 600 // Cache preflight for 10 minutes
   });
 
   await app.register(helmet);
