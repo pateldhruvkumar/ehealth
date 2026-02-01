@@ -31,7 +31,6 @@ export interface PaginatedResponse<T> {
 
 export interface User {
   id: string;
-  clerkId: string;
   email: string;
   role: UserRole;
   isVerified: boolean;
@@ -148,9 +147,14 @@ export interface DoctorDashboardStats {
 }
 
 // Form Inputs
-export interface RegisterPatientInput {
-  clerkId: string;
+export interface LoginInput {
   email: string;
+  password: string;
+}
+
+export interface RegisterPatientInput {
+  email: string;
+  password: string;
   firstName: string;
   lastName: string;
   dateOfBirth: Date;
@@ -159,8 +163,8 @@ export interface RegisterPatientInput {
 }
 
 export interface RegisterDoctorInput {
-  clerkId: string;
   email: string;
+  password: string;
   firstName: string;
   lastName: string;
   specialization: string;

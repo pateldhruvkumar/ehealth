@@ -7,10 +7,23 @@ import type {
 } from "../validators/patient.validator";
 
 export async function getProfile(userId: string) {
-  return prisma.patient.findUnique({
+  const patient = await prisma.patient.findUnique({
     where: { userId },
     include: { user: true, emergencyContacts: true },
   });
+  
+  // Convert Dates to strings to avoid serialization issues
+  if (patient) {
+    return {
+      ...patient,
+      dateOfBirth: patient.dateOfBirth.toISOString(),
+      user: {
+        ...patient.user,
+        // Ensure user fields are safe too if needed
+      }
+    };
+  }
+  return patient;
 }
 
 export async function updateProfile(userId: string, data: UpdateProfileInput) {

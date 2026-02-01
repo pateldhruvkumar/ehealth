@@ -23,8 +23,7 @@ const envSchema = z.object({
 
   DATABASE_URL: z.string().min(1),
 
-  CLERK_PUBLISHABLE_KEY: z.string().min(1),
-  CLERK_SECRET_KEY: z.string().min(1),
+  JWT_SECRET: z.string().min(1),
 
   AWS_ACCESS_KEY_ID: z.string().optional(),
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
@@ -41,8 +40,7 @@ export const FRONTEND_URL = env.FRONTEND_URL;
 
 export const DATABASE_URL = env.DATABASE_URL;
 
-export const CLERK_PUBLISHABLE_KEY = env.CLERK_PUBLISHABLE_KEY;
-export const CLERK_SECRET_KEY = env.CLERK_SECRET_KEY;
+export const JWT_SECRET = env.JWT_SECRET;
 
 export const AWS_ACCESS_KEY_ID = env.AWS_ACCESS_KEY_ID;
 export const AWS_SECRET_ACCESS_KEY = env.AWS_SECRET_ACCESS_KEY;

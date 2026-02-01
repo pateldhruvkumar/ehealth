@@ -3,7 +3,6 @@ import "dotenv/config";
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
-import { clerkPlugin } from "@clerk/fastify";
 
 import { connectDB, disconnectDB } from "./config/database";
 import { HOST, PORT, FRONTEND_URL } from "./config/env";
@@ -36,14 +35,11 @@ async function buildServer() {
   }
 
   await app.register(cors, {
-    origin: FRONTEND_URL,
+    origin: process.env.NODE_ENV === "development" ? true : FRONTEND_URL,
     credentials: true
   });
 
   await app.register(helmet);
-
-  // Enables getAuth(request) + request.auth for Clerk session tokens.
-  await app.register(clerkPlugin);
 
   app.setErrorHandler(errorHandler);
 

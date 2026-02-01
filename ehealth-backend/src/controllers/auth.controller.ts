@@ -2,9 +2,21 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import { errors, success } from "../utils/response";
 import {
   registerDoctorSchema,
-  registerPatientSchema
+  registerPatientSchema,
+  loginSchema
 } from "../validators/auth.validator";
 import * as authService from "../services/auth.service";
+
+export async function login(request: FastifyRequest, reply: FastifyReply) {
+  const parsed = loginSchema.parse(request.body);
+
+  try {
+    const result = await authService.login(parsed);
+    return success(reply, result, "Login successful");
+  } catch (e: any) {
+    return errors.unauthorized(reply, e.message || "Invalid credentials");
+  }
+}
 
 export async function registerPatient(request: FastifyRequest, reply: FastifyReply) {
   const parsed = registerPatientSchema.parse(request.body);
@@ -45,4 +57,3 @@ export async function deleteMe(request: FastifyRequest, reply: FastifyReply) {
   await authService.deleteUser(request.user.id);
   return success(reply, { deleted: true }, "Account deactivated");
 }
-

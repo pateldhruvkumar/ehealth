@@ -2,7 +2,6 @@ export type UserRole = "PATIENT" | "DOCTOR" | "ADMIN";
 
 export interface AuthUser {
   id: string;
-  clerkId: string;
   email: string;
   role: UserRole;
 }

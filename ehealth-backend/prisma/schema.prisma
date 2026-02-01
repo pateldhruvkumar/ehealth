@@ -34,12 +34,14 @@ enum SharedAccessStatus {
 }
 
 model User {
-  id         String  @id @default(cuid())
-  clerkId    String  @unique
-  email      String  @unique
+  id         String   @id @default(cuid())
+  email      String   @unique
+  password   String
   role       Role
-  isVerified Boolean @default(false)
-  isActive   Boolean @default(true)
+  isVerified Boolean  @default(false)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   patient Patient?
   doctor  Doctor?

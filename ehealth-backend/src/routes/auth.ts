@@ -3,6 +3,7 @@ import * as authController from "../controllers/auth.controller";
 import { authenticate } from "../middleware/auth";
 
 export async function authRoutes(app: FastifyInstance) {
+  app.post("/login", authController.login);
   app.post("/register/patient", authController.registerPatient);
   app.post("/register/doctor", authController.registerDoctor);
 

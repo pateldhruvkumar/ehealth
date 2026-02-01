@@ -19,7 +19,7 @@ A comprehensive Electronic Health Records (EHR) management system allowing patie
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS, shadcn/ui
 - **State Management:** Zustand, TanStack Query
-- **Authentication:** Clerk (@clerk/nextjs)
+- **Authentication:** Custom JWT Auth (PostgreSQL)
 - **Forms:** React Hook Form, Zod
 - **HTTP Client:** Axios
 

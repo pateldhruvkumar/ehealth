@@ -15,7 +15,8 @@ export function errorHandler(
 
   const anyErr = err as FastifyError & { status?: number };
   const status = anyErr.statusCode ?? anyErr.status ?? 500;
-  const message = status >= 500 ? "Internal server error" : anyErr.message;
+  // Always show the real error message for debugging purposes
+  const message = anyErr.message;
 
   const code =
     status === 400

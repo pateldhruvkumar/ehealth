@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useClerk } from "@clerk/nextjs";
+import { useLogout } from "@/hooks/use-auth";
 import {
   ClipboardList,
   LayoutDashboard,
@@ -74,7 +74,7 @@ export function DoctorSidebar() {
         <Button
           variant="ghost"
           className="w-full justify-start text-slate-500 hover:text-red-600 dark:text-slate-400"
-          onClick={() => signOut({ redirectUrl: "/" })}
+          onClick={() => logout()}
         >
           <LogOut className="mr-2 h-4 w-4" />
           Log out

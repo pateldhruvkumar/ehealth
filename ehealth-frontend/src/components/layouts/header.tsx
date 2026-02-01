@@ -1,9 +1,17 @@
 "use client";
 
-import { UserButton } from "@clerk/nextjs";
-import { Bell } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { useCurrentUser } from "@/hooks/use-auth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useCurrentUser, useLogout } from "@/hooks/use-auth";
+import { Bell, User } from "lucide-react";
 
 interface HeaderProps {
   mobileNav?: React.ReactNode;
@@ -11,6 +19,7 @@ interface HeaderProps {
 
 export function Header({ mobileNav }: HeaderProps) {
   const { data: user } = useCurrentUser();
+  const logout = useLogout();
 
   return (
     <header className="sticky top-0 z-10 flex h-16 w-full items-center justify-between border-b bg-white px-4 md:px-6 dark:bg-slate-950">
@@ -26,7 +35,35 @@ export function Header({ mobileNav }: HeaderProps) {
         <Button variant="ghost" size="icon" className="text-slate-500">
           <Bell className="h-5 w-5" />
         </Button>
-        <UserButton afterSignOutUrl="/" />
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={user?.profileImage} alt={user?.firstName} />
+                <AvatarFallback>
+                  {user?.firstName?.charAt(0) || "U"}
+                </AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56" align="end" forceMount>
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">
+                  {user?.firstName} {user?.lastName}
+                </p>
+                <p className="text-xs leading-none text-muted-foreground">
+                  {user?.user?.email}
+                </p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => logout()}>
+              Log out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

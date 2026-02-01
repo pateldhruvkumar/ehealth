@@ -1,21 +1,25 @@
 "use client";
 
-import { ClerkProvider } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
+import { setAuthToken } from "@/lib/api-client";
+import { useQueryClient } from "@tanstack/react-query";
+import { AUTH_TOKEN_KEY } from "@/lib/constants";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  return (
-    <ClerkProvider
-      appearance={{
-        layout: {
-          socialButtonsPlacement: "bottom",
-          socialButtonsVariant: "iconButton",
-        },
-        variables: {
-          colorPrimary: "#2563eb", // Blue-600
-        },
-      }}
-    >
-      {children}
-    </ClerkProvider>
-  );
+  const [isInitialized, setIsInitialized] = useState(false);
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    if (token) {
+      setAuthToken(token);
+    }
+    setIsInitialized(true);
+  }, []);
+
+  if (!isInitialized) {
+    return null; // Or a loading spinner
+  }
+
+  return <>{children}</>;
 }

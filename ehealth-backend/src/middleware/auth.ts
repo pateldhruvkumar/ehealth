@@ -1,32 +1,40 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
-import { getAuth } from "@clerk/fastify";
+import jwt from "jsonwebtoken";
 import { prisma } from "../config/database";
+import { JWT_SECRET } from "../config/env";
 import { errors } from "../utils/response";
 import type { AuthUser, UserRole } from "../types";
 
 export async function authenticate(request: FastifyRequest, reply: FastifyReply) {
-  const auth = getAuth(request, { acceptsToken: "session_token" });
+  const authHeader = request.headers.authorization;
 
-  if (!auth.isAuthenticated || !auth.userId) {
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return errors.unauthorized(reply, "Authentication required");
   }
 
-  const dbUser = await prisma.user.findUnique({
-    where: { clerkId: auth.userId }
-  });
+  const token = authHeader.split(" ")[1];
 
-  if (!dbUser || !dbUser.isActive) {
-    return errors.unauthorized(reply, "User not found or inactive");
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+
+    const dbUser = await prisma.user.findUnique({
+      where: { id: decoded.id }
+    });
+
+    if (!dbUser || !dbUser.isActive) {
+      return errors.unauthorized(reply, "User not found or inactive");
+    }
+
+    const user: AuthUser = {
+      id: dbUser.id,
+      email: dbUser.email,
+      role: dbUser.role as unknown as UserRole
+    };
+
+    request.user = user;
+  } catch (err) {
+    return errors.unauthorized(reply, "Invalid or expired token");
   }
-
-  const user: AuthUser = {
-    id: dbUser.id,
-    clerkId: dbUser.clerkId,
-    email: dbUser.email,
-    role: dbUser.role as unknown as UserRole
-  };
-
-  request.user = user;
 }
 
 export function authorize(...roles: UserRole[]) {
@@ -39,4 +47,3 @@ export function authorize(...roles: UserRole[]) {
 export const requirePatient = authorize("PATIENT", "ADMIN");
 export const requireDoctor = authorize("DOCTOR", "ADMIN");
 export const requireAdmin = authorize("ADMIN");
-

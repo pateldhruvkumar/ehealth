@@ -3,16 +3,35 @@
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { useClerk } from "@clerk/nextjs";
-import { LogOut, Menu, ShieldCheck } from "lucide-react";
+import { useLogout } from "@/hooks/use-auth";
+import {
+  FileText,
+  History,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Share2,
+  ShieldCheck,
+  Upload,
+  User,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
+const ICONS = {
+  LayoutDashboard,
+  FileText,
+  Upload,
+  Share2,
+  History,
+  User,
+};
+
 interface NavItem {
   title: string;
   href: string;
-  icon: any;
+  iconName: keyof typeof ICONS;
 }
 
 interface MobileNavProps {
@@ -23,7 +42,7 @@ interface MobileNavProps {
 export function MobileNav({ items, type }: MobileNavProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const { signOut } = useClerk();
+  const logout = useLogout();
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -45,6 +64,7 @@ export function MobileNav({ items, type }: MobileNavProps) {
             <nav className="grid gap-1 px-2">
               {items.map((item, index) => {
                 const isActive = pathname === item.href;
+                const Icon = ICONS[item.iconName];
                 return (
                   <Link
                     key={index}
@@ -59,7 +79,7 @@ export function MobileNav({ items, type }: MobileNavProps) {
                         : "text-slate-600 dark:text-slate-400"
                     )}
                   >
-                    <item.icon className="h-4 w-4" />
+                    <Icon className="h-4 w-4" />
                     {item.title}
                   </Link>
                 );
@@ -70,7 +90,7 @@ export function MobileNav({ items, type }: MobileNavProps) {
             <Button
               variant="ghost"
               className="w-full justify-start text-slate-500 hover:text-red-600 dark:text-slate-400"
-              onClick={() => signOut({ redirectUrl: "/" })}
+              onClick={() => logout()}
             >
               <LogOut className="mr-2 h-4 w-4" />
               Log out

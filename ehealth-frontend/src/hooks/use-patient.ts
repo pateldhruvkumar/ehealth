@@ -12,6 +12,7 @@ export function usePatientProfile() {
     queryKey: ["patient-profile"],
     queryFn: async () => {
       const response = await patientService.getProfile();
+      // Ensure we return the raw data object, not nested in `data` again
       return response.data;
     },
   });

@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const registerPatientSchema = z.object({
-  clerkId: z.string().min(1),
   email: z.string().email(),
+  password: z.string().min(8),
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   dateOfBirth: z.coerce.date(),
@@ -11,8 +11,8 @@ export const registerPatientSchema = z.object({
 });
 
 export const registerDoctorSchema = z.object({
-  clerkId: z.string().min(1),
   email: z.string().email(),
+  password: z.string().min(8),
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   specialization: z.string().min(1),
@@ -21,6 +21,12 @@ export const registerDoctorSchema = z.object({
   hospitalName: z.string().min(1).optional()
 });
 
+export const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1)
+});
+
 export type RegisterPatientInput = z.infer<typeof registerPatientSchema>;
 export type RegisterDoctorInput = z.infer<typeof registerDoctorSchema>;
+export type LoginInput = z.infer<typeof loginSchema>;
 
