@@ -2,18 +2,12 @@ import { DoctorSidebar } from "@/components/layouts/doctor-sidebar";
 import { Header } from "@/components/layouts/header";
 import { MobileNav } from "@/components/layouts/mobile-nav";
 import { ROUTES } from "@/lib/constants";
-import {
-  ClipboardList,
-  LayoutDashboard,
-  User,
-  Users,
-} from "lucide-react";
 
 const navItems = [
-  { title: "Dashboard", href: ROUTES.DOCTOR_DASHBOARD, icon: LayoutDashboard },
-  { title: "My Patients", href: ROUTES.DOCTOR_PATIENTS, icon: Users },
-  { title: "Consultations", href: ROUTES.DOCTOR_CONSULTATIONS, icon: ClipboardList },
-  { title: "Profile", href: ROUTES.DOCTOR_PROFILE, icon: User },
+  { title: "Dashboard", href: ROUTES.DOCTOR_DASHBOARD, iconName: "LayoutDashboard" as const },
+  { title: "My Patients", href: ROUTES.DOCTOR_PATIENTS, iconName: "Users" as const },
+  { title: "Consultations", href: ROUTES.DOCTOR_CONSULTATIONS, iconName: "ClipboardList" as const },
+  { title: "Profile", href: ROUTES.DOCTOR_PROFILE, iconName: "User" as const },
 ];
 
 export default function DoctorLayout({

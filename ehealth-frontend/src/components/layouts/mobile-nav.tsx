@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useLogout } from "@/hooks/use-auth";
 import {
+  ClipboardList,
   FileText,
   History,
   LayoutDashboard,
@@ -14,6 +15,7 @@ import {
   ShieldCheck,
   Upload,
   User,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -26,6 +28,8 @@ const ICONS = {
   Share2,
   History,
   User,
+  Users,
+  ClipboardList,
 };
 
 interface NavItem {
