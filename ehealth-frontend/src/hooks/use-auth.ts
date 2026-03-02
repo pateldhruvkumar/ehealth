@@ -19,7 +19,7 @@ export function useCurrentUser() {
   });
 }
 
-import { ROUTES } from "@/lib/constants";
+import { AUTH_TOKEN_KEY, ROUTES } from "@/lib/constants";
 
 export function useLogin() {
   const queryClient = useQueryClient();
@@ -29,7 +29,8 @@ export function useLogin() {
     mutationFn: (data: LoginInput) => authService.login(data),
     onSuccess: (response) => {
       if (response.data?.token) {
-        localStorage.setItem("token", response.data.token);
+        localStorage.setItem(AUTH_TOKEN_KEY, response.data.token);
+        document.cookie = `${AUTH_TOKEN_KEY}=${response.data.token}; path=/; SameSite=Lax; max-age=604800`;
         queryClient.invalidateQueries({ queryKey: ["current-user"] });
         toast.success("Login successful!");
         // Redirect based on role
@@ -53,7 +54,8 @@ export function useLogout() {
   const router = useRouter();
 
   return () => {
-    localStorage.removeItem("token");
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    document.cookie = `${AUTH_TOKEN_KEY}=; path=/; max-age=0`;
     queryClient.setQueryData(["current-user"], null);
     queryClient.clear();
     router.push(ROUTES.LOGIN);
@@ -69,7 +71,8 @@ export function useRegisterPatient() {
     mutationFn: (data: RegisterPatientInput) => authService.registerPatient(data),
     onSuccess: (response) => {
       if (response.data?.token) {
-        localStorage.setItem("token", response.data.token);
+        localStorage.setItem(AUTH_TOKEN_KEY, response.data.token);
+        document.cookie = `${AUTH_TOKEN_KEY}=${response.data.token}; path=/; SameSite=Lax; max-age=604800`;
         queryClient.invalidateQueries({ queryKey: ["current-user"] });
         toast.success("Registration successful!");
         router.push(ROUTES.DASHBOARD); // Or dashboard
@@ -89,7 +92,8 @@ export function useRegisterDoctor() {
     mutationFn: (data: RegisterDoctorInput) => authService.registerDoctor(data),
     onSuccess: (response) => {
        if (response.data?.token) {
-        localStorage.setItem("token", response.data.token);
+        localStorage.setItem(AUTH_TOKEN_KEY, response.data.token);
+        document.cookie = `${AUTH_TOKEN_KEY}=${response.data.token}; path=/; SameSite=Lax; max-age=604800`;
         queryClient.invalidateQueries({ queryKey: ["current-user"] });
         toast.success("Registration successful!");
         router.push(ROUTES.DOCTOR_DASHBOARD); // Or onboarding

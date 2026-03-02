@@ -26,7 +26,12 @@ async function doctorHasAccess(doctorId: string, patientId: string) {
 }
 
 export async function generateUploadUrlForPatient(patientId: string, data: GetUploadUrlInput) {
-  const key = `patients/${patientId}/documents/${Date.now()}-${randomUUID()}-${data.fileName}`;
+  const safeName = data.fileName
+    .toLowerCase()
+    .replace(/[^a-z0-9.\-_]/g, "-")
+    .replace(/-{2,}/g, "-");
+
+  const key = `patients/${patientId}/${data.documentType}/${Date.now()}-${randomUUID()}-${safeName}`;
   const url = await generateUploadUrl(key, data.contentType);
   const s3Url = buildPublicS3Url(key);
 

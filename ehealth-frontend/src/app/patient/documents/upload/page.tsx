@@ -54,6 +54,7 @@ export default function UploadPage() {
     defaultValues: {
       title: "",
       description: "",
+      documentDate: "",
       tags: "",
     },
   });
@@ -80,7 +81,7 @@ export default function UploadPage() {
       // 2. Upload to S3
       await axios.put(presignedData.url, file, {
         headers: { "Content-Type": file.type },
-        onUploadProgress: (progressEvent) => {
+        onUploadProgress: progressEvent => {
           const percent = Math.round(
             (progressEvent.loaded * 100) / (progressEvent.total || file.size)
           );
@@ -102,7 +103,10 @@ export default function UploadPage() {
           ? new Date(values.documentDate)
           : undefined,
         tags: values.tags
-          ? values.tags.split(",").map((t) => t.trim()).filter(Boolean)
+          ? values.tags
+              .split(",")
+              .map(t => t.trim())
+              .filter(Boolean)
           : [],
       };
 
@@ -110,9 +114,13 @@ export default function UploadPage() {
 
       toast.success("Document uploaded successfully");
       router.push(ROUTES.DOCUMENTS);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Upload failed:", error);
-      toast.error("Upload failed. Please try again.");
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Upload failed. Please try again.";
+      toast.error(errorMessage);
       setIsUploading(false);
       setUploadProgress(0);
     }
@@ -162,17 +170,14 @@ export default function UploadPage() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Document Type</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {DOCUMENT_TYPES.map((type) => (
+                      {DOCUMENT_TYPES.map(type => (
                         <SelectItem key={type} value={type}>
                           {type.replace("_", " ")}
                         </SelectItem>

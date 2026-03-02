@@ -27,7 +27,7 @@ export function Header({ mobileNav }: HeaderProps) {
         {mobileNav}
         <div className="hidden md:block">
           <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200">
-            Welcome back, {user?.firstName || "User"}
+            Welcome back, {user?.patient?.firstName || user?.doctor?.firstName || "User"}
           </h2>
         </div>
       </div>
@@ -40,9 +40,9 @@ export function Header({ mobileNav }: HeaderProps) {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-8 w-8 rounded-full">
               <Avatar className="h-8 w-8">
-                <AvatarImage src={user?.profileImage} alt={user?.firstName} />
+                <AvatarImage src={user?.patient?.profileImage || user?.doctor?.profileImage} alt={user?.patient?.firstName || user?.doctor?.firstName} />
                 <AvatarFallback>
-                  {user?.firstName?.charAt(0) || "U"}
+                  {(user?.patient?.firstName || user?.doctor?.firstName)?.[0]?.toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
             </Button>
@@ -51,10 +51,11 @@ export function Header({ mobileNav }: HeaderProps) {
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">
-                  {user?.firstName} {user?.lastName}
+                  {user?.patient?.firstName || user?.doctor?.firstName}{" "}
+                  {user?.patient?.lastName || user?.doctor?.lastName}
                 </p>
                 <p className="text-xs leading-none text-muted-foreground">
-                  {user?.user?.email}
+                  {user?.email}
                 </p>
               </div>
             </DropdownMenuLabel>

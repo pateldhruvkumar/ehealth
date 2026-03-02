@@ -37,6 +37,11 @@ export interface User {
   isActive: boolean;
 }
 
+export interface UserWithProfile extends User {
+  patient?: Patient;
+  doctor?: Doctor;
+}
+
 export interface Patient {
   userId: string;
   firstName: string;
