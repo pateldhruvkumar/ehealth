@@ -5,6 +5,7 @@ import {
   RegisterDoctorInput,
   RegisterPatientInput,
   User,
+  UserWithProfile,
 } from "@/types";
 
 export const authService = {
@@ -30,7 +31,7 @@ export const authService = {
   },
 
   getMe: async () => {
-    return apiClient.get<any, ApiResponse<User>>("/auth/me");
+    return apiClient.get<any, ApiResponse<UserWithProfile>>("/auth/me");
   },
 
   deleteAccount: async () => {

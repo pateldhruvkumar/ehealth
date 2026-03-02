@@ -3,12 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useRouter } from "next/navigation";
-import { authService } from "@/services/auth.service";
-import { setAuthToken } from "@/lib/api-client";
-import { AUTH_TOKEN_KEY } from "@/lib/constants";
-import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { useLogin } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -19,7 +14,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { ROUTES } from "@/lib/constants";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -29,8 +23,7 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
-  const router = useRouter();
-  const queryClient = useQueryClient();
+  const { mutate: login, isPending } = useLogin();
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -40,31 +33,8 @@ export function LoginForm() {
     },
   });
 
-  const onSubmit = async (data: LoginFormData) => {
-    try {
-      const response = await authService.login(data);
-      const { token, user } = response.data;
-
-      // Save token
-      localStorage.setItem(AUTH_TOKEN_KEY, token);
-      setAuthToken(token);
-
-      // Invalidate queries to fetch user data
-      await queryClient.invalidateQueries({ queryKey: ["current-user"] });
-
-      toast.success("Login successful!");
-
-      // Redirect based on role
-      if (user.role === "PATIENT") {
-        router.push(ROUTES.DASHBOARD);
-      } else if (user.role === "DOCTOR") {
-        router.push(ROUTES.DOCTOR_DASHBOARD);
-      } else {
-        router.push("/");
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Invalid email or password");
-    }
+  const onSubmit = (data: LoginFormData) => {
+    login(data);
   };
 
   return (
@@ -96,8 +66,8 @@ export function LoginForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? "Signing in..." : "Sign in"}
+        <Button type="submit" className="w-full" disabled={isPending}>
+          {isPending ? "Signing in..." : "Sign in"}
         </Button>
       </form>
     </Form>

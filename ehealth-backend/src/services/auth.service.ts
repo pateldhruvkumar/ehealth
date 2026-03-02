@@ -30,78 +30,68 @@ export async function login(data: LoginInput) {
 export async function registerPatient(data: RegisterPatientInput) {
   const hashedPassword = await bcrypt.hash(data.password, 10);
 
-  return prisma.$transaction(async (tx) => {
-    const user = await tx.user.create({
-      data: {
-        email: data.email,
-        password: hashedPassword,
-        role: "PATIENT",
-        isVerified: false,
-        isActive: true
+  const user = await prisma.user.create({
+    data: {
+      email: data.email,
+      password: hashedPassword,
+      role: "PATIENT",
+      isVerified: false,
+      isActive: true,
+      patient: {
+        create: {
+          firstName: data.firstName,
+          lastName: data.lastName,
+          dateOfBirth: data.dateOfBirth,
+          gender: data.gender,
+          phone: data.phone,
+          allergies: [],
+          chronicConditions: []
+        }
       }
-    });
-
-    const patient = await tx.patient.create({
-      data: {
-        userId: user.id,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        dateOfBirth: data.dateOfBirth,
-        gender: data.gender,
-        phone: data.phone,
-        allergies: [],
-        chronicConditions: []
-      }
-    });
-
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    return { token, user, patient };
-  }, {
-    timeout: 15000
+    },
+    include: { patient: true }
   });
+
+  const token = jwt.sign(
+    { id: user.id, email: user.email, role: user.role },
+    JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+
+  return { token, user, patient: user.patient };
 }
 
 export async function registerDoctor(data: RegisterDoctorInput) {
   const hashedPassword = await bcrypt.hash(data.password, 10);
 
-  return prisma.$transaction(async (tx) => {
-    const user = await tx.user.create({
-      data: {
-        email: data.email,
-        password: hashedPassword,
-        role: "DOCTOR",
-        isVerified: false,
-        isActive: true
+  const user = await prisma.user.create({
+    data: {
+      email: data.email,
+      password: hashedPassword,
+      role: "DOCTOR",
+      isVerified: false,
+      isActive: true,
+      doctor: {
+        create: {
+          firstName: data.firstName,
+          lastName: data.lastName,
+          phone: data.phone,
+          specialization: data.specialization,
+          licenseNumber: data.licenseNumber,
+          hospitalName: data.hospitalName
+        }
       }
-    });
-
-    const doctor = await tx.doctor.create({
-      data: {
-        userId: user.id,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        phone: data.phone,
-        specialization: data.specialization,
-        licenseNumber: data.licenseNumber,
-        hospitalName: data.hospitalName
-      }
-    });
-
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    return { token, user, doctor };
-  }, {
-    timeout: 15000
+    },
+    include: { doctor: true }
   });
+
+  const token = jwt.sign(
+    { id: user.id, email: user.email, role: user.role },
+    JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+
+  return { token, user, doctor: user.doctor };
 }
 
 export async function getCurrentUser(userId: string) {

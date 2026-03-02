@@ -50,10 +50,16 @@ export function MedicalInfoForm({ initialData }: MedicalInfoFormProps) {
     updateMedicalInfo.mutate({
       bloodGroup: values.bloodGroup,
       allergies: values.allergies
-        ? values.allergies.split(",").map((s) => s.trim()).filter(Boolean)
+        ? values.allergies
+            .split(",")
+            .map(s => s.trim())
+            .filter(Boolean)
         : [],
       chronicConditions: values.chronicConditions
-        ? values.chronicConditions.split(",").map((s) => s.trim()).filter(Boolean)
+        ? values.chronicConditions
+            .split(",")
+            .map(s => s.trim())
+            .filter(Boolean)
         : [],
     });
   };
@@ -67,14 +73,14 @@ export function MedicalInfoForm({ initialData }: MedicalInfoFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Blood Group</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select blood group" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {BLOOD_GROUPS.map((bg) => (
+                  {BLOOD_GROUPS.map(bg => (
                     <SelectItem key={bg} value={bg}>
                       {bg}
                     </SelectItem>
