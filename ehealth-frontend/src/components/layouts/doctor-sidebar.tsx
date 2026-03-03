@@ -40,7 +40,7 @@ const items = [
 
 export function DoctorSidebar() {
   const pathname = usePathname();
-  const { signOut } = useClerk();
+  const logout = useLogout();
 
   return (
     <div className="hidden h-screen w-64 flex-col border-r bg-white dark:bg-slate-950 md:flex">

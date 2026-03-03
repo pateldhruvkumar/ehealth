@@ -9,7 +9,6 @@ import { getInitials } from "@/lib/utils";
 import { Doctor } from "@/types";
 import { Check, Search } from "lucide-react";
 import { useState } from "react";
-import { useDebounce } from "@/hooks/use-debounce"; // Need to create this hook or inline
 
 // Inline debounce for simplicity since I missed creating it in shared hooks
 function useDebounceValue<T>(value: T, delay: number): T {

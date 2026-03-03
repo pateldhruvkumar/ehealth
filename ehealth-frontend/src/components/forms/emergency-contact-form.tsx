@@ -21,7 +21,7 @@ const contactSchema = z.object({
   relationship: z.string().min(1, "Relationship is required"),
   phone: z.string().min(10, "Phone number must be at least 10 digits"),
   email: z.string().email().optional().or(z.literal("")),
-  isPrimary: z.boolean().default(false),
+  isPrimary: z.boolean(),
 });
 
 interface EmergencyContactFormProps {
