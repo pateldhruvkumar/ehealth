@@ -23,6 +23,12 @@ import {
 import Link from "next/link";
 import { useState } from "react";
 
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+const DAYS = ["S", "M", "T", "W", "T", "F", "S"];
+
 // ── Mini Calendar ──────────────────────────────────────────────────────────────
 function MiniCalendar() {
   const [current, setCurrent] = useState(new Date());
@@ -30,16 +36,12 @@ function MiniCalendar() {
   const year = current.getFullYear();
   const month = current.getMonth();
 
-  const MONTHS = [
-    "January","February","March","April","May","June",
-    "July","August","September","October","November","December",
-  ];
-  const DAYS = ["S","M","T","W","T","F","S"];
-
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const cells: (number | null)[] = Array(firstDay).fill(null);
-  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  const cells: (number | null)[] = [
+    ...Array<null>(firstDay).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
 
   return (
     <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-5 shadow-sm">
@@ -139,10 +141,10 @@ function ActivityChart({ documents }: { documents: Document[] }) {
 
   documents.forEach((doc) => {
     const d = new Date(doc.uploadedAt);
-    const m = months.find(
+    const entry = months.find(
       (m) => m.month === d.getMonth() && m.year === d.getFullYear()
     );
-    if (m) m.count++;
+    if (entry) entry.count++;
   });
 
   const maxCount = Math.max(...months.map((m) => m.count), 1);
@@ -178,9 +180,8 @@ export default function DashboardPage() {
   const { data: profile, isLoading: profileLoading } = usePatientProfile();
   const { data: shares, isLoading: sharesLoading } = useActiveShares();
 
-  if (statsLoading || docsLoading || profileLoading || sharesLoading) {
-    return <DashboardSkeleton />;
-  }
+  const isLoading = statsLoading || docsLoading || profileLoading || sharesLoading;
+  if (isLoading) return <DashboardSkeleton />;
 
   const allDocs = documentsData?.items || [];
   const recentDocs = allDocs.slice(0, 4);
@@ -220,10 +221,11 @@ export default function DashboardPage() {
               <p className="text-blue-100 text-sm mb-4 max-w-xs">
                 Review your latest documents and stay on top of your health journey.
               </p>
-              <Link href={ROUTES.DOCUMENTS}>
-                <button className="bg-white text-blue-600 text-sm font-semibold px-5 py-2 rounded-xl hover:bg-blue-50 transition-colors">
-                  View Records &rarr;
-                </button>
+              <Link
+                href={ROUTES.DOCUMENTS}
+                className="inline-block bg-white text-blue-600 text-sm font-semibold px-5 py-2 rounded-xl hover:bg-blue-50 transition-colors"
+              >
+                View Records &rarr;
               </Link>
             </div>
             <div
@@ -453,11 +455,13 @@ export default function DashboardPage() {
                   label: "View Access Log",
                 },
               ].map(({ href, icon: Icon, label }) => (
-                <Link key={href} href={href}>
-                  <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors cursor-pointer mt-1">
-                    <Icon className="h-4 w-4 text-blue-200" />
-                    <span className="text-sm">{label}</span>
-                  </div>
+                <Link
+                  key={href}
+                  href={href}
+                  className="flex items-center gap-3 p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors mt-1"
+                >
+                  <Icon className="h-4 w-4 text-blue-200" />
+                  <span className="text-sm">{label}</span>
                 </Link>
               ))}
             </div>
