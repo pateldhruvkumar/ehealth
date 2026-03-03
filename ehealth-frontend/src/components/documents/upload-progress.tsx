@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { X } from "lucide-react";
 
 interface UploadProgressProps {

@@ -2,15 +2,28 @@
 
 A comprehensive Electronic Health Records (EHR) management system allowing patients to manage their medical documents securely and share them with doctors. Built with a modern tech stack ensuring performance, security, and scalability.
 
+## Live Demo
+
+- **Frontend:** [https://ehealth-iota.vercel.app](https://ehealth-iota.vercel.app)
+- **Backend API:** [https://ehealth-production.up.railway.app/api](https://ehealth-production.up.railway.app/api)
+
+**Test Accounts**
+| Role | Email | Password |
+|------|-------|----------|
+| Patient | patient@example.com | Password123! |
+| Doctor | doctor@example.com | Password123! |
+
+---
+
 ## Tech Stack
 
 ### Backend
 - **Runtime:** Node.js, TypeScript
-- **Framework:** Fastify
-- **Database:** PostgreSQL (with Neon serverless)
-- **ORM:** Prisma v7 with pg adapter
-- **Authentication:** Custom JWT with bcrypt
-- **Storage:** AWS S3
+- **Framework:** Fastify v5
+- **Database:** PostgreSQL via [Neon](https://neon.tech) (serverless)
+- **ORM:** Prisma v7 with `@prisma/adapter-pg`
+- **Authentication:** JWT + bcrypt
+- **Storage:** AWS S3 (presigned URLs)
 - **Validation:** Zod
 - **Logging:** Pino
 
@@ -19,8 +32,7 @@ A comprehensive Electronic Health Records (EHR) management system allowing patie
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS v4, shadcn/ui
 - **State Management:** TanStack Query (React Query)
-- **Authentication:** Custom JWT Auth
-- **Forms:** React Hook Form, Zod
+- **Forms:** React Hook Form + Zod
 - **HTTP Client:** Axios
 - **UI Components:** shadcn/ui, Radix UI
 
@@ -29,114 +41,153 @@ A comprehensive Electronic Health Records (EHR) management system allowing patie
 ## Prerequisites
 
 - Node.js (v18+)
-- PostgreSQL (v14+) or Neon Database
-- AWS Account (S3 Bucket) - Optional for document storage
+- PostgreSQL (v14+) or [Neon](https://neon.tech) database
+- AWS Account with an S3 bucket for document storage
 
 ---
 
-## Getting Started
+## Local Development
 
 ### 1. Database Setup
 
-You can use either a local PostgreSQL instance or a cloud provider like Neon.
-
 #### Option A: Local PostgreSQL
 ```bash
-# Using Docker
 docker run --name ehealth-postgres -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres
 ```
 
 #### Option B: Neon Database (Recommended)
 1. Sign up at [neon.tech](https://neon.tech)
 2. Create a new project
-3. Copy the connection string
+3. Copy the connection string — use the **pooled** connection string
+
+> **Note:** If using Neon's pooled connection string, remove `&channel_binding=require` from the URL. Use only `?sslmode=require`. The `channel_binding` parameter causes connection failures in some hosted environments (Railway, etc.).
 
 ### 2. Backend Setup
 
-Navigate to the backend directory:
 ```bash
 cd ehealth-backend
-```
-
-Install dependencies:
-```bash
 npm install
 ```
 
-Configure Environment Variables:
-Create a `.env` file in the `ehealth-backend` directory:
+Create `ehealth-backend/.env`:
 
 ```bash
-# ehealth-backend/.env
 PORT=4000
 HOST=0.0.0.0
 NODE_ENV=development
 FRONTEND_URL=http://localhost:3000
 
-# Database
-DATABASE_URL="postgresql://user:password@host:5432/ehealth_db"
+# Database — remove &channel_binding=require if present
+DATABASE_URL="postgresql://user:password@host:5432/ehealth_db?sslmode=require"
 
-# JWT Secret (generate a secure random string)
+# JWT Secret — generate with: openssl rand -base64 32
 JWT_SECRET="your-super-secret-jwt-key-change-this"
 
-# AWS S3 (Optional - for document storage)
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
+# AWS S3
+AWS_ACCESS_KEY_ID=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_key
 AWS_REGION=us-east-1
-AWS_S3_BUCKET=ehealth-documents
+AWS_S3_BUCKET=your-bucket-name
 ```
 
-Generate Prisma Client:
+Run migrations and seed:
+
 ```bash
-npx prisma generate
+npm run db:generate   # Generate Prisma Client
+npm run db:migrate    # Apply migrations (dev)
+npm run db:seed       # Create test accounts
 ```
 
-Run Database Migrations:
+Start the server:
+
 ```bash
-npx prisma migrate deploy
+npm run dev           # http://localhost:4000
 ```
-
-Seed Database (Optional):
-```bash
-npx prisma db seed
-```
-
-This will create test accounts:
-- **Patient:** `patient@example.com` / `Password123!`
-- **Doctor:** `doctor@example.com` / `Password123!`
-- **Admin:** `admin@example.com` / `Password123!`
-
-Start the Backend Server:
-```bash
-npm run dev
-```
-The server will start at `http://localhost:4000`.
 
 ### 3. Frontend Setup
 
-Open a new terminal and navigate to the frontend directory:
 ```bash
 cd ehealth-frontend
-```
-
-Install dependencies:
-```bash
 npm install
 ```
 
-Configure Environment Variables:
-Create a `.env` file in the `ehealth-frontend` directory:
+Create `ehealth-frontend/.env.local`:
 
 ```bash
-# ehealth-frontend/.env
 NEXT_PUBLIC_API_URL=http://localhost:4000/api
 ```
 
-Start the Frontend Server:
+Start the dev server:
+
 ```bash
-npm run dev
+npm run dev           # http://localhost:3000
 ```
-The application will be available at `http://localhost:3000`.
+
+---
+
+## Deployment
+
+### Backend — Railway
+
+1. Create a new project on [Railway](https://railway.app) and connect your GitHub repo
+2. Set the **root directory** to `ehealth-backend`
+3. Set the **start command** to `npm start` (runs the compiled build)
+4. Add the following environment variables in Railway → Variables:
+
+| Variable | Value |
+|---|---|
+| `NODE_ENV` | `production` |
+| `DATABASE_URL` | Your Neon connection string (`?sslmode=require` only — no `channel_binding`) |
+| `JWT_SECRET` | A strong random secret |
+| `FRONTEND_URL` | Your Vercel app URL (e.g. `https://your-app.vercel.app`) |
+| `AWS_ACCESS_KEY_ID` | Your AWS key |
+| `AWS_SECRET_ACCESS_KEY` | Your AWS secret |
+| `AWS_REGION` | Your S3 bucket region |
+| `AWS_S3_BUCKET` | Your S3 bucket name |
+
+5. Run production migrations from your local machine:
+
+```bash
+cd ehealth-backend
+$env:DATABASE_URL="your-production-neon-url"  # PowerShell
+npx prisma migrate deploy
+npm run db:seed
+```
+
+### Frontend — Vercel
+
+1. Import your GitHub repo on [Vercel](https://vercel.com)
+2. Set the **root directory** to `ehealth-frontend`
+3. Add the following environment variable in Vercel → Settings → Environment Variables:
+
+| Variable | Value |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | `https://your-railway-app.up.railway.app/api` (include `/api`) |
+
+4. Redeploy after saving environment variables — changes don't take effect until a new build.
+
+### AWS S3 — CORS Configuration
+
+To allow the browser to upload files directly to S3 from your Vercel domain, you must add a CORS policy to your bucket:
+
+1. Go to **AWS Console → S3 → your bucket → Permissions → CORS**
+2. Add the following policy:
+
+```json
+[
+  {
+    "AllowedHeaders": ["*"],
+    "AllowedMethods": ["GET", "PUT", "POST", "DELETE", "HEAD"],
+    "AllowedOrigins": [
+      "https://your-app.vercel.app"
+    ],
+    "ExposeHeaders": ["ETag", "Content-Length", "Content-Type"],
+    "MaxAgeSeconds": 3000
+  }
+]
+```
+
+Add all Vercel domains (including preview URLs) to `AllowedOrigins` as needed.
 
 ---
 
@@ -144,80 +195,82 @@ The application will be available at `http://localhost:3000`.
 
 ### Patient Portal
 - **Dashboard:** Overview of recent documents and shared records
-- **Document Management:** 
+- **Document Management:**
   - Upload medical records with drag & drop support
-  - Categorize by document type (X-Ray, MRI, Blood Report, etc.)
+  - Categorize by type (X-Ray, MRI, CT Scan, Blood Report, etc.)
   - View and download documents
   - Soft delete with recovery option
-- **Sharing:** 
+- **Sharing:**
   - Share records with doctors via secure access codes
   - Generate QR codes for easy sharing
   - Set expiration dates for shared access
   - Revoke access anytime
 - **Access Logs:** View detailed history of who accessed your records
-- **Profile:** 
+- **Profile:**
   - Manage personal information
-  - Update medical information (blood group, allergies, chronic conditions)
+  - Update medical info (blood group, allergies, chronic conditions)
   - Add emergency contacts
 
 ### Doctor Portal
-- **Dashboard:** View consultation statistics and recent activities
-- **Patient Access:** 
-  - View records of patients who have granted access
-  - Access documents by category
+- **Dashboard:** Consultation statistics and recent activity
+- **Patient Access:**
+  - View records of patients who granted access
+  - Browse documents by category
   - Download patient documents
-- **Consultations:** 
-  - Record consultation notes
-  - Add diagnosis information
+- **Consultations:**
+  - Record consultation notes and diagnosis
   - Track patient visit history
 - **Patients:** Browse and search patients with granted access
 
-### Security Features
-- JWT-based authentication with secure token storage
+### Security
+- JWT-based authentication
 - Password hashing with bcrypt (10 rounds)
-- Role-based access control (Patient, Doctor, Admin)
-- Secure document sharing with access codes
-- Access logging for audit trails
+- Role-based access control (Patient, Doctor)
+- Secure document sharing with unique access codes
+- Audit trail for all document access
 - CORS protection
-- Environment-based security configurations
+- AWS S3 presigned URLs — files never pass through the backend server
 
 ---
 
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/login` - User login
-- `POST /api/auth/register/patient` - Patient registration
-- `POST /api/auth/register/doctor` - Doctor registration
-- `GET /api/auth/me` - Get current user
-- `DELETE /api/auth/me` - Delete account
+- `POST /api/auth/login` — User login
+- `POST /api/auth/register/patient` — Patient registration
+- `POST /api/auth/register/doctor` — Doctor registration
+- `GET /api/auth/me` — Get current user
+- `DELETE /api/auth/me` — Deactivate account
 
 ### Documents (Patient only)
-- `GET /api/documents` - List all documents
-- `GET /api/documents/:id` - Get document details
-- `POST /api/documents` - Create document record
-- `PUT /api/documents/:id` - Update document
-- `DELETE /api/documents/:id` - Soft delete document
-- `POST /api/documents/upload-url` - Get S3 upload URL
-- `GET /api/documents/:id/download-url` - Get S3 download URL
+- `GET /api/documents` — List all documents
+- `GET /api/documents/:id` — Get document details
+- `POST /api/documents` — Create document record
+- `PUT /api/documents/:id` — Update document
+- `DELETE /api/documents/:id` — Soft delete document
+- `POST /api/documents/upload-url` — Get S3 presigned upload URL
+- `GET /api/documents/:id/download-url` — Get S3 presigned download URL
 
 ### Sharing (Patient only)
-- `POST /api/sharing/grant` - Grant access to doctor
-- `POST /api/sharing/revoke` - Revoke doctor access
-- `GET /api/sharing/active` - List active shares
-- `GET /api/sharing/access-log` - View access logs
-- `GET /api/sharing/verify/:accessCode` - Verify access code
+- `POST /api/sharing/grant` — Grant access to a doctor
+- `POST /api/sharing/revoke` — Revoke doctor access
+- `GET /api/sharing/active` — List active shares
+- `GET /api/sharing/access-log` — View access logs
+- `GET /api/sharing/verify/:accessCode` — Verify an access code
 
-### Patients
-- `GET /api/patient/profile` - Get patient profile
-- `PUT /api/patient/profile` - Update patient profile
-- `POST /api/patient/emergency-contact` - Add emergency contact
+### Patient
+- `GET /api/patient/profile` — Get patient profile
+- `PUT /api/patient/profile` — Update patient profile
+- `POST /api/patient/emergency-contact` — Add emergency contact
 
-### Doctors
-- `GET /api/doctor/profile` - Get doctor profile
-- `PUT /api/doctor/profile` - Update doctor profile
-- `GET /api/doctor/patients` - List accessible patients
-- `GET /api/doctor/patients/:id/documents` - Get patient documents
+### Doctor
+- `GET /api/doctor/profile` — Get doctor profile
+- `PUT /api/doctor/profile` — Update doctor profile
+- `GET /api/doctor/patients` — List accessible patients
+- `GET /api/doctor/patients/:id/documents` — Get patient documents
+
+### Health
+- `GET /api/health` — Health check
 
 ---
 
@@ -225,152 +278,156 @@ The application will be available at `http://localhost:3000`.
 
 ```
 ehealth/
-├── ehealth-backend/          # Fastify API Server
+├── ehealth-backend/              # Fastify API Server
 │   ├── src/
-│   │   ├── config/           # Environment & DB config
-│   │   │   ├── database.ts   # Prisma client with pg adapter
-│   │   │   ├── env.ts        # Environment validation
-│   │   │   └── s3.ts         # AWS S3 configuration
-│   │   ├── controllers/      # Route handlers
-│   │   ├── middleware/       # Auth & Error handling
-│   │   ├── routes/           # API Routes definition
-│   │   ├── services/         # Business logic
-│   │   ├── types/            # TypeScript types
-│   │   ├── utils/            # Helper functions
-│   │   └── validators/       # Zod schemas
+│   │   ├── config/               # Environment & DB config
+│   │   │   ├── database.ts       # Prisma client with pg adapter
+│   │   │   ├── env.ts            # Zod environment validation
+│   │   │   └── s3.ts             # AWS S3 presigned URL helpers
+│   │   ├── controllers/          # Route handlers
+│   │   ├── middleware/           # Auth & error handling
+│   │   ├── routes/               # Route definitions
+│   │   ├── services/             # Business logic
+│   │   ├── types/                # TypeScript types & Fastify augmentations
+│   │   ├── utils/                # Response helpers
+│   │   ├── validators/           # Zod request schemas
+│   │   └── server.ts             # Entry point
 │   ├── prisma/
-│   │   ├── schema.prisma     # Database schema
-│   │   ├── migrations/       # Database migrations
-│   │   └── seed.ts           # Database seeding
-│   └── prisma.config.ts      # Prisma configuration
+│   │   ├── schema.prisma         # Database schema
+│   │   ├── migrations/           # Migration history
+│   │   └── seed.ts               # Seed script
+│   └── package.json
 │
-└── ehealth-frontend/         # Next.js Application
+└── ehealth-frontend/             # Next.js Application
     ├── src/
-    │   ├── app/              # App Router pages
-    │   │   ├── auth/         # Authentication pages
-    │   │   ├── patient/      # Patient portal pages
-    │   │   └── doctor/       # Doctor portal pages
-    │   ├── components/       # UI Components
-    │   │   ├── ui/           # shadcn/ui components
-    │   │   ├── forms/        # Form components
-    │   │   ├── layouts/      # Layout components
-    │   │   ├── shared/       # Shared components
-    │   │   ├── documents/    # Document components
-    │   │   └── sharing/      # Sharing components
-    │   ├── hooks/            # Custom React Hooks
-    │   ├── lib/              # Utilities & API client
-    │   ├── providers/        # React Context providers
-    │   ├── services/         # API Service calls
-    │   └── types/            # TypeScript interfaces
-    └── components.json       # shadcn/ui config
+    │   ├── app/                  # App Router pages
+    │   │   ├── auth/             # Login & registration
+    │   │   ├── patient/          # Patient portal
+    │   │   └── doctor/           # Doctor portal
+    │   ├── components/           # UI Components
+    │   │   ├── ui/               # shadcn/ui primitives
+    │   │   ├── forms/            # Form components
+    │   │   ├── layouts/          # Layout components
+    │   │   ├── shared/           # Shared components
+    │   │   ├── documents/        # Document components
+    │   │   └── sharing/          # Sharing components
+    │   ├── hooks/                # Custom React hooks
+    │   ├── lib/                  # API client, constants, utilities
+    │   ├── providers/            # React context providers
+    │   ├── services/             # API call functions
+    │   └── types/                # TypeScript interfaces
+    └── components.json           # shadcn/ui config
 ```
 
 ---
 
 ## Database Schema
 
-### Core Models
-- **User:** Authentication and role management
-- **Patient:** Patient profile and medical information
-- **Doctor:** Doctor profile and credentials
-- **Document:** Medical document metadata
-- **SharedAccess:** Document sharing between patients and doctors
-- **AccessLog:** Audit trail for document access
-- **EmergencyContact:** Patient emergency contacts
-- **Consultation:** Doctor consultation records
+- **User** — Authentication and role management
+- **Patient** — Patient profile and medical information
+- **Doctor** — Doctor profile and credentials
+- **Document** — Medical document metadata (soft-deletable)
+- **SharedAccess** — Document sharing between patients and doctors
+- **AccessLog** — Audit trail for document access
+- **EmergencyContact** — Patient emergency contacts
+- **Consultation** — Doctor consultation records
 
 ---
 
-## Development
+## Commands Reference
 
-### Backend Commands
+### Backend (`cd ehealth-backend`)
+
 ```bash
-# Development
-npm run dev
+npm run dev           # Start dev server with hot reload (port 4000)
+npm run build         # Compile TypeScript to dist/
+npm start             # Run compiled production build
 
-# Build
-npm run build
-
-# Start production
-npm start
-
-# Database
-npx prisma generate        # Generate Prisma Client
-npx prisma migrate dev     # Create and apply migration
-npx prisma migrate deploy  # Apply migrations (production)
-npx prisma db seed         # Seed database
-npx prisma studio          # Open Prisma Studio
+npm run db:generate   # Regenerate Prisma client after schema changes
+npm run db:migrate    # Create and apply a new migration (dev)
+npm run db:seed       # Seed DB with test accounts
+npm run db:studio     # Open Prisma Studio
 ```
 
-### Frontend Commands
+For production migrations:
 ```bash
-# Development
-npm run dev
+npx prisma migrate deploy
+```
 
-# Build
-npm run build
+### Frontend (`cd ehealth-frontend`)
 
-# Start production
-npm start
-
-# Linting
-npm run lint
+```bash
+npm run dev           # Start Next.js dev server (port 3000)
+npm run build         # Build for production
+npm run lint          # Run ESLint
 ```
 
 ---
 
 ## Environment Variables
 
-### Backend Required
-- `DATABASE_URL` - PostgreSQL connection string
-- `JWT_SECRET` - Secret key for JWT signing
+### Backend
 
-### Backend Optional
-- `PORT` - Server port (default: 4000)
-- `HOST` - Server host (default: 0.0.0.0)
-- `NODE_ENV` - Environment (development/production)
-- `FRONTEND_URL` - Frontend URL for CORS
-- `AWS_ACCESS_KEY_ID` - AWS credentials
-- `AWS_SECRET_ACCESS_KEY` - AWS credentials
-- `AWS_REGION` - AWS region
-- `AWS_S3_BUCKET` - S3 bucket name
+| Variable | Required | Description |
+|---|---|---|
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `JWT_SECRET` | Yes | Secret key for JWT signing |
+| `PORT` | No | Server port (default: `4000`) |
+| `HOST` | No | Server host (default: `0.0.0.0`) |
+| `NODE_ENV` | No | `development` or `production` |
+| `FRONTEND_URL` | No | Frontend origin for CORS |
+| `AWS_ACCESS_KEY_ID` | No* | AWS credentials |
+| `AWS_SECRET_ACCESS_KEY` | No* | AWS credentials |
+| `AWS_REGION` | No* | S3 bucket region |
+| `AWS_S3_BUCKET` | No* | S3 bucket name |
 
-### Frontend Required
-- `NEXT_PUBLIC_API_URL` - Backend API URL
+*Required for document upload/download functionality.
 
----
+### Frontend
 
-## Security Best Practices
-
-1. **Never commit `.env` files** - They contain sensitive credentials
-2. **Use strong JWT secrets** - Generate using `openssl rand -base64 32`
-3. **Enable HTTPS in production** - Use SSL/TLS certificates
-4. **Regularly update dependencies** - Run `npm audit` and fix vulnerabilities
-5. **Implement rate limiting** - Protect against brute force attacks
-6. **Use environment-specific configs** - Different settings for dev/prod
-7. **Backup database regularly** - Prevent data loss
+| Variable | Required | Description |
+|---|---|---|
+| `NEXT_PUBLIC_API_URL` | Yes | Backend API base URL (must end with `/api`) |
 
 ---
 
 ## Troubleshooting
 
-### Backend won't start
-- Check if PostgreSQL is running
-- Verify `DATABASE_URL` in `.env`
-- Run `npx prisma generate` to regenerate Prisma Client
-- Check if port 4000 is available
+### 404 on API requests in production
+- Verify `NEXT_PUBLIC_API_URL` in Vercel ends with `/api` — e.g. `https://your-app.up.railway.app/api`
 
-### Frontend can't connect to backend
-- Verify backend is running on port 4000
-- Check `NEXT_PUBLIC_API_URL` in `.env`
-- Check browser console for CORS errors
-- Verify CORS settings in backend `server.ts`
+### 401 Unauthorized on login
+- Check `DATABASE_URL` in Railway points to the correct database
+- Ensure the production database has been seeded (`npm run db:seed`)
+- Verify `JWT_SECRET` is set in Railway environment variables
+
+### Backend can't connect to Neon database
+- Remove `&channel_binding=require` from the `DATABASE_URL` — use `?sslmode=require` only
+- Verify the connection string is correctly set in Railway Variables
+
+### S3 upload blocked by CORS
+- Add a CORS policy to your S3 bucket (see [AWS S3 CORS Configuration](#aws-s3--cors-configuration))
+- Ensure your Vercel domain is listed in `AllowedOrigins`
+
+### Backend won't start locally
+- Verify `DATABASE_URL` in `.env` is correct
+- Run `npm run db:generate` to regenerate the Prisma Client
+- Check if port 4000 is already in use
 
 ### Database migration errors
-- Ensure database exists
-- Check database connection string
-- Run `npx prisma migrate reset` to reset database (development only)
-- Check migration files for conflicts
+- Run `npx prisma migrate reset` to reset (development only — destroys data)
+- For production, always use `npx prisma migrate deploy`
+
+---
+
+## Security Best Practices
+
+1. **Never commit `.env` files** — add them to `.gitignore`
+2. **Use a strong JWT secret** — generate with `openssl rand -base64 32`
+3. **Restrict S3 CORS origins** — list specific domains, not `*`, in production
+4. **Use environment-specific configs** — different secrets for dev and prod
+5. **Regularly rotate AWS credentials** — use IAM roles with least-privilege policies
+6. **Keep dependencies updated** — run `npm audit` periodically
 
 ---
 
@@ -390,20 +447,13 @@ This project is licensed under the MIT License.
 
 ---
 
-## Support
-
-For issues and questions:
-- Open an issue on GitHub
-- Check existing documentation
-- Review API endpoints and database schema
-
----
-
 ## Acknowledgments
 
-- [Next.js](https://nextjs.org/) - React framework
-- [Fastify](https://fastify.io/) - Web framework
-- [Prisma](https://www.prisma.io/) - Database ORM
-- [shadcn/ui](https://ui.shadcn.com/) - UI components
-- [TanStack Query](https://tanstack.com/query) - Data fetching
-- [Neon](https://neon.tech/) - Serverless PostgreSQL
+- [Next.js](https://nextjs.org/) — React framework
+- [Fastify](https://fastify.dev/) — Web framework
+- [Prisma](https://www.prisma.io/) — Database ORM
+- [shadcn/ui](https://ui.shadcn.com/) — UI components
+- [TanStack Query](https://tanstack.com/query) — Data fetching
+- [Neon](https://neon.tech/) — Serverless PostgreSQL
+- [Railway](https://railway.app/) — Backend hosting
+- [Vercel](https://vercel.com/) — Frontend hosting
