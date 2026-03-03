@@ -43,13 +43,13 @@ export default function LandingPage() {
             instantly with doctors using temporary access links or QR codes.
           </p>
           <div className="flex flex-col gap-4 sm:flex-row">
-            <Link href={ROUTES.REGISTER_PATIENT}>
+            <Link href={ROUTES.LOGIN}>
               <Button size="lg" className="h-12 px-8 text-base">
                 <User className="mr-2 h-5 w-5" />
                 I'm a Patient
               </Button>
             </Link>
-            <Link href={ROUTES.REGISTER_DOCTOR}>
+            <Link href={ROUTES.LOGIN}>
               <Button
                 size="lg"
                 variant="outline"
